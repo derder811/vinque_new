@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../../Compo/Header/Header";
 import styles from "./ShopPage.module.css";
+import Footer from "../../../Compo/Footer/Footer";
 
 export default function ShopPage() {
   const [sellers, setSellers] = useState([]);
@@ -141,6 +142,7 @@ export default function ShopPage() {
           </div>
         )}
       </div>
+           <Footer/>
     </>
   );
 }

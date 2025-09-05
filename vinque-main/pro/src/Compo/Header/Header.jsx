@@ -121,7 +121,7 @@ export default function Header({ showSearchBar = true, showItems = true, isSelle
             onKeyDown={handleKeyDown}
           />
           <button className={styles.searchBtn} onClick={handleSearchSubmit}>
-            🔍
+             <img src="/search.png" alt="search" className={styles.searchIcon} />
           </button>
         </div>
       )}

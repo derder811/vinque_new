@@ -30,6 +30,7 @@
   display: flex;
   align-items: center;
   font-size: 1.5rem;
+  font-family: cinzel;
   font-weight: bold;
   color: rgb(35, 35, 35);
   cursor: pointer;
@@ -37,8 +38,9 @@
   white-space: nowrap;
 }
 
+
 .logoImage {
-  height: 1.2em;
+  height: 2.3rem;
   width: auto;
   margin-right: 0.5em;
   vertical-align: middle;
@@ -65,6 +67,14 @@
   background: white;
   color: black;
   font-size: 1rem;
+}
+
+.searchIcon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+  height: 2.5em;
+ width: 1.5rem;
 }
 
 .searchBtn {

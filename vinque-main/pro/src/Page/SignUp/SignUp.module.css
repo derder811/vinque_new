@@ -18,23 +18,28 @@ html, body {
 
 .signup-form {
   background: #fffaf0;
-  padding: 1.5rem 3rem;
+  padding: 2rem 3rem;
   border-radius: 1rem;
   box-shadow: 0 12px 30px rgba(107, 142, 35, 0.15);
   width: 100%;
-  max-width: 800px;
+  max-width: 850px;
   text-align: left;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .signup-title {
-  font-size: 1.5rem;
-  font-weight: 800;
+  margin-top: -1rem;
+  font-size: 1.8rem;
+  font-weight: 600;
   color: #ab941f;
-  margin-bottom: 1rem;
-  margin-top: 1rem;
-  letter-spacing: 1px;
+  margin-bottom: 2.5rem;
   text-align: center;
-  background-color: transparent;
+  letter-spacing: 1px;
 }
 
 .error-message {
@@ -92,11 +97,8 @@ html, body {
   border: 2px solid #ab941f;
   border-radius: 50%;
   position: relative;
-  outline: none;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-right: 0.5rem;
-  accent-color: #6b8e23;
 }
 
 .radio-input:checked {
@@ -118,7 +120,7 @@ html, body {
 
 .form-label {
   display: block;
-  margin-bottom: 0.1rem;
+  margin-bottom: 0.3rem;
   color: #6d5e2c;
   font-weight: 600;
   font-size: 1rem;
@@ -126,11 +128,11 @@ html, body {
 
 .form-input {
   width: 100%;
-  padding: 0.75rem;
-  margin-bottom: 0.1rem;
+  padding: 0.8rem;
   border: 1px solid #d9caa3;
   border-radius: 0.5rem;
   font-size: 1rem;
+  transition: border 0.2s ease, box-shadow 0.2s ease;
 }
 
 .form-input:focus {
@@ -190,7 +192,6 @@ legend.form-label {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;

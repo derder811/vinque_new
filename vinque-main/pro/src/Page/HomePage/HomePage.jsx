@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation, useParams } from "react-router-dom";
 import Card from "../../Compo/CardItem/CardItem.jsx";
 import Header from "../../Compo/Header/Header.jsx";
-import Carousel from "../../Compo/Carousel/Carousel.jsx";
 import Category from "../../Compo/CategoryNav/CategoryNav.jsx";
 import Footer from "../../Compo/Footer/Footer.jsx";
 import styles from "./HomePage.module.css";
@@ -170,7 +169,7 @@ export default function HomePage() {
                 ref={(el) => (cardRefs.current[index] = el)}
                 className={styles.appearItem}
               >
-                <Card data={item} onCardClick={() => handleCardClick(item.product_id)} />
+                <Card  showPurchaseButton = {true} data={item} onCardClick={() => handleCardClick(item.product_id)} />
               </div>
             ))
           ) : (

@@ -1,33 +1,64 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import styles from './Footer.module.css';
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import styles from "./Footer.module.css";
 
 export default function Footer() {
   const navigate = useNavigate();
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  // Show button when scrolling down
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 300) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
 
   return (
     <footer className={styles.footer}>
-      <div className={styles.footerContent}>
+      <div className={styles.footerContainer}>
         <div className={styles.footerSection}>
-          <h3 className={styles.sectionTitle}>About Vinque</h3>
-          <p className={styles.sectionText}>
-            Vinque is your gateway to discovering antiques, collectibles, and rare finds from passionate sellers.
+          <h3>About Vinque</h3>
+          <p>
+            Vinque is your gateway to discovering antiques, collectibles, and
+            rare finds from passionate sellers.
           </p>
         </div>
-        
+
         <div className={styles.footerSection}>
-          <h3 className={styles.sectionTitle}>Quick Links</h3>
-          <ul className={styles.linksList}>
-            <li><button onClick={() => navigate('/')} className={styles.footerLink}>Home</button></li>
-            <li><button onClick={() => navigate('/login')} className={styles.footerLink}>Login</button></li>
-            <li><button onClick={() => navigate('/signup')} className={styles.footerLink}>Signup</button></li>
+          <h3>Quick Links</h3>
+          <ul>
+            <li onClick={() => navigate("/login")}>Login</li>
+            <li onClick={() => navigate("/signup")}>Signup</li>
           </ul>
         </div>
+
+        <div className={styles.footerSection}>
+          <h3>Contact</h3>
+          <p>Email: support@vinque.com</p>
+          <p>Phone: +63 912 345 6789</p>
+        </div>
       </div>
-      
+
       <div className={styles.footerBottom}>
-        <p className={styles.copyright}>© 2025 Vinque. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} Vinque. All rights reserved.</p>
       </div>
+
+      {/* Scroll To Top */}
+      {showScrollTop && (
+        <button className={styles.scrollTopBtn} onClick={scrollToTop}>
+          ↑
+        </button>
+      )}
     </footer>
   );
 }

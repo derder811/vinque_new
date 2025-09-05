@@ -97,8 +97,12 @@ export default function OTPVerification() {
         // Navigate to appropriate dashboard
         if (userData.role === 'Seller') {
           navigate(`/seller/home/${userData.user_id}`);
-        } else {
+        } else if (userData.role === 'Customer') {
           navigate(`/home/${userData.user_id}`);
+        } else if (isNewUser) {
+          navigate(`/signup/${userData.user_id}`);
+        } else {
+          navigate('/login'); // fallback
         }
       } else {
         setError(data.message || 'Invalid OTP. Please try again.');

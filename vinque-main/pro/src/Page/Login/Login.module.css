@@ -5,17 +5,19 @@
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #efe8d1;
+  background: linear-gradient(135deg, #e9decf, #efe8d1);
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  padding: 1rem;
 }
 
 .login-form {
   background: #fffaf0;
-  padding: 2rem 3rem;
+  padding: 2rem 2.5rem;
   border-radius: 1rem;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
+  animation: fadeIn 0.5s ease;
 }
 
 .form-title {
@@ -23,11 +25,12 @@
   margin-bottom: 1.5rem;
   color: #3a3320;
   text-align: center;
+  font-weight: 700;
 }
 
-/* Existing form-group */
+/* Input groups */
 .form-group {
-  margin-bottom: 1.25rem; /* Ensure consistent spacing */
+  margin-bottom: 1.25rem;
 }
 
 .form-label {
@@ -40,10 +43,11 @@
 .form-input {
   width: 100%;
   padding: 0.75rem;
-  /* Removed margin-bottom here as it's now handled by .form-group or .password-input-container */
   border: 1px solid #d9caa3;
   border-radius: 0.5rem;
   font-size: 1rem;
+  background-color: #fff;
+  transition: all 0.2s ease;
 }
 
 .form-input:focus {
@@ -52,35 +56,33 @@
   box-shadow: 0 0 8px rgba(107, 142, 35, 0.3);
 }
 
-/* --- NEW STYLES FOR PASSWORD TOGGLE --- */
+/* Password toggle */
 .password-input-container {
-  position: relative; /* Allows absolute positioning of the icon */
-  display: flex; /* Helps align input and icon if needed */
-  align-items: center; /* Vertically align items */
+  position: relative;
+  display: flex;
+  align-items: center;
 }
 
-/* Adjust the input to fit within the container */
 .password-input-container .form-input {
-  width: 100%; /* Make input take full width of container */
-  padding-right: 2.5rem; /* Make space for the icon */
+  padding-right: 2.5rem;
 }
 
 .password-toggle-icon {
   position: absolute;
-  right: 0.75rem; /* Position from the right edge of the container */
+  right: 0.75rem;
   cursor: pointer;
-  color: #6d5e2c; /* Icon color */
-  font-size: 1.2rem; /* Size of the emoji/icon */
-  user-select: none; /* Prevent text selection */
-  padding: 0.25rem; /* Add some padding for easier clicking */
+  color: #6d5e2c;
+  font-size: 1.2rem;
+  user-select: none;
+  padding: 0.25rem;
+  transition: opacity 0.2s ease;
 }
 
 .password-toggle-icon:hover {
-  opacity: 0.8;
+  opacity: 0.7;
 }
-/* --- END NEW STYLES --- */
 
-
+/* Buttons */
 .button-group {
   display: flex;
   justify-content: space-between;
@@ -97,7 +99,7 @@
   border: none;
   border-radius: 0.5rem;
   cursor: pointer;
-  transition: background 0.3s ease, box-shadow 0.3s ease;
+  transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.1s ease;
 }
 
 .login-btn {
@@ -108,6 +110,7 @@
 
 .login-btn:hover {
   background: linear-gradient(135deg, #c6ae2b 0%, #ab941f 100%);
+  transform: translateY(-2px);
 }
 
 .signup-btn {
@@ -118,8 +121,29 @@
 
 .signup-btn:hover {
   background: linear-gradient(135deg, #98cb4f 0%, #6b8e23 100%);
+  transform: translateY(-2px);
 }
 
+/* Reset password */
+.reset-password-container {
+  margin-top: 1rem;
+  text-align: right; /* align to the right side */
+}
+
+.reset-btn {
+  background: none;
+  border: none;
+  color: #0077cc;
+  font-size: 0.95rem;
+  cursor: pointer;
+  text-decoration: underline;
+  transition: color 0.2s ease;
+}
+
+.reset-btn:hover {
+  color: #005999;
+}
+/* Error message */
 .error-message {
   background-color: #ffe0e0;
   border: 1px solid #ff9999;
@@ -129,9 +153,42 @@
   margin-bottom: 1rem;
   text-align: center;
   font-size: 0.9rem;
+  animation: shake 0.3s ease;
 }
 
 .error-message small {
   font-size: 0.8rem;
   color: #a00000;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shake {
+  0% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  50% { transform: translateX(4px); }
+  75% { transform: translateX(-4px); }
+  100% { transform: translateX(0); }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .login-form {
+    padding: 1.5rem;
+  }
+  .form-title {
+    font-size: 1.6rem;
+  }
+  .login-btn,
+  .signup-btn {
+    font-size: 0.9rem;
+    padding: 0.6rem;
+  }
+  .reset-btn {
+    font-size: 0.85rem;
+  }
 }

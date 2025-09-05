@@ -12,39 +12,32 @@
 }
 
 /* Ensure Header, Carousel, and Category fit on 480px screen */
-/* These are general styles. You might need to adjust the internal CSS of Header, Carousel, and Category components for optimal fitting. */
-/* Example for Header - you'd likely adjust its internal CSS for search bar, logo etc. */
-/* If Header is a direct child of HomePage, you might add specific styles here. */
-.HomePage > :global(.Header) { /* Assuming Header component might apply a class like 'Header' */
-    width: 100%;
-    padding: 0 10px; /* Adjust padding if needed */
-    box-sizing: border-box;
+.HomePage > :global(.Header) {
+  width: 100%;
+  padding: 0 10px;
+  box-sizing: border-box;
 }
 
-/* Example for Carousel */
-.HomePage > :global(.Carousel) { /* Assuming Carousel component might apply a class like 'Carousel' */
-    width: 100%;
-    /* Add specific styles for image scaling within the carousel if needed */
+.HomePage > :global(.Carousel) {
+  width: 100%;
 }
 
-/* Example for Category Navigation Wrapper */
 .CategoryNavWrapper {
-    width: 100%;
-    padding: 0 10px; /* Adjust padding if needed for the category buttons */
-    box-sizing: border-box;
+  width: 100%;
+  padding: 0 10px;
+  box-sizing: border-box;
 }
 
 .Cat {
   font-size: 2rem;
   margin: 1rem 0;
-  margin-left: 3rem; /* move slightly to the right */
+  margin-left: 3rem;
   font-weight: bold;
   text-transform: uppercase;
   letter-spacing: 1px;
-  /* Responsive adjustments for Category text */
-  padding-left: 1rem; /* Adjust for smaller screens */
+  padding-left: 1rem;
   box-sizing: border-box;
-  color: #555; /* Changed text color to be visible on light background */
+  color: #555;
 }
 
 /* Navigation Tabs */
@@ -125,7 +118,7 @@
 /* Product Sections */
 .section {
   padding: 2rem;
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
 }
 
@@ -139,7 +132,7 @@
 
 .productGrid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(5, 1fr); /* 5 per row on desktop */
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -153,9 +146,15 @@
 }
 
 /* Responsive Design */
+@media (max-width: 1199px) {
+  .productGrid {
+    grid-template-columns: repeat(4, 1fr); /* 4 per row */
+  }
+}
+
 @media (max-width: 1024px) {
   .productGrid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(3, 1fr); /* 3 per row */
     gap: 1.25rem;
   }
   
@@ -176,7 +175,7 @@
 
 @media (max-width: 768px) {
   .productGrid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 1fr); /* 2 per row */
     gap: 1rem;
   }
   
@@ -269,7 +268,7 @@ h1 {
   background-color: rgba(0, 0, 0, 0.2);
   padding: 1rem;
   border-radius: 8px;
-  color: #555; /* Changed text color to be visible on light background */
+  color: #555;
 }
 
 /* Appear / disappear base animation */

@@ -166,6 +166,7 @@ export default function StorePage() {
       </div>
       
       <Cart isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+        
     </>
   );
 }

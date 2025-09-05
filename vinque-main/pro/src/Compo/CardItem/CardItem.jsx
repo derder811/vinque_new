@@ -8,6 +8,7 @@ export default function CardItem({
   data,
   onCardClick,
   showViewCount = false,
+  showPurchaseButton = false, // ✅ added default prop
 }) {
   const navigate = useNavigate();
   const { addToCart, getItemQuantity } = useCart();
@@ -28,41 +29,40 @@ export default function CardItem({
 
   const itemQuantity = getItemQuantity(data.product_id);
 
-
-
   return (
     <div
       className={styles.card}
-      onClick={() => onCardClick(data.product_id)}
+      onClick={() => onCardClick && onCardClick(data.product_id)}
     >
-
-      
       <div className={styles.imageContainer}>
         <img className={styles.image} src={imageSrc} alt={data.product_name} />
       </div>
       
       <div className={styles.content}>
-
-        
         <h3 className={styles.title}>{data?.product_name || "Unnamed Product"}</h3>
         <p className={styles.description}>
-          {data?.description ? data.description.substring(0, 60) + '...' : 'High-quality product with premium materials'}
+          {data?.description
+            ? data.description.substring(0, 60) + "..."
+            : "High-quality product with premium materials"}
         </p>
         
         <div className={styles.priceContainer}>
           <span className={styles.currentPrice}>₱{data?.price || 0}</span>
           {showViewCount && (
             <div className={styles.viewCounter}>
-              <span className={styles.eyeIcon}>👁️</span>
+              <img src="/visibility.png" alt="views" className={styles.viewIcon} /> 
               <span className={styles.viewCount}>{data?.view_count || 0}</span>
             </div>
           )}
         </div>
-        
-        <button className={styles.addButton} onClick={handleCheckout}>
-          <span className={styles.addIcon}>🛒</span>
-          Add
-        </button>
+
+        {/* ✅ Fixed spelling and logic */}
+        {showPurchaseButton && ( 
+          <button className={styles.addButton} onClick={handleCheckout}>
+            <span className={styles.addIcon}>🛒</span>
+            Add
+          </button>
+        )}
       </div>
     </div>
   );

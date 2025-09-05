@@ -24,10 +24,8 @@ export default function Login() {
     setIsLoading(true);
 
     try {
-      // Try to use environment variable, fallback to hardcoded URL
       const apiUrl = import.meta.env.VITE_API_URL || "";
-      
-      // Skip server check and proceed directly to login
+
       const response = await fetch(`${apiUrl}/api/login`, {
         method: "POST",
         headers: {
@@ -66,7 +64,6 @@ export default function Login() {
         localStorage.setItem("user_id", user.user_id);
         navigate(`/A_home/${user.user_id}`);
       }
-
     } catch (err) {
       console.error("Login error:", err);
       setError(err.message);
@@ -119,15 +116,19 @@ export default function Login() {
           <button type="submit" className={styles["login-btn"]} disabled={isLoading}>
             {isLoading ? "Logging in..." : "Login"}
           </button>
+        </div>
+
+        {/* Reset password button */}
+        <div className={styles["reset-password-container"]}>
           <button
-            onClick={() => navigate("/signup")}
-            className={styles["signup-btn"]}
             type="button"
+            className={styles["reset-btn"]}
+            onClick={() => navigate("/reset-password")}
           >
-            Sign Up
+            Forgot Password?
           </button>
         </div>
-        
+
         <GoogleSignUp />
       </form>
     </div>
