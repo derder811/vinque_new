@@ -525,9 +525,99 @@
   transform: translateY(-1px);
 }
 
+.viewPermitLink {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  background: var(--primary-gradient);
+  color: white;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.viewPermitLink:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
 .pending {
   background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
   color: white;
+}
+
+/* Seller Applications Cards */
+.sellerApplicationsContainer {
+  padding: 1rem;
+  background-color: #FFFFFF;
+}
+
+.sellerCardsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.sellerCard {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.sellerCard:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: #8B4513;
+}
+
+.sellerCardHeader {
+  background: linear-gradient(90deg, rgba(139, 69, 19, 0.05) 0%, transparent 100%);
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sellerCardHeader h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sellerCardContent {
+  padding: 1.25rem;
+}
+
+.sellerCardRow {
+  display: flex;
+  margin-bottom: 0.75rem;
+  align-items: center;
+}
+
+.sellerCardRow:last-child {
+  margin-bottom: 0;
+}
+
+.sellerCardLabel {
+  font-weight: 600;
+  color: var(--text-primary);
+  width: 140px;
+  flex-shrink: 0;
+}
+
+.sellerCardActions {
+  padding: 1.25rem;
+  border-top: 1px solid var(--border-light);
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
 }
 
 /* Responsive Design */
@@ -565,6 +655,10 @@
   }
   
   .analyticsGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .sellerCardsGrid {
     grid-template-columns: 1fr;
   }
   
@@ -611,5 +705,25 @@
   .tableRow {
     grid-template-columns: 1fr;
     gap: 0.5rem;
+  }
+  
+  .sellerCardRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .sellerCardLabel {
+    width: 100%;
+    margin-bottom: 0.25rem;
+  }
+  
+  .sellerCardActions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .approveBtn,
+  .rejectBtn {
+    width: 100%;
   }
 }

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../../Compo/Header/Header";
+import NavTabs from "../../../Compo/NavTabs/NavTabs";
 import styles from "./ShopPage.module.css";
 import Footer from "../../../Compo/Footer/Footer";
 
@@ -63,22 +64,7 @@ export default function ShopPage() {
     <>
       <Header isSeller={false} showSearchBar={true} showItems={true} />
       <div className={styles.container}>
-        {/* Navigation Tabs */}
-        <div className={styles.navTabs}>
-          <button 
-            className={styles.navTab}
-            onClick={() => navigate(`/home/${id}`)}
-          >
-            Home
-          </button>
-          <button className={`${styles.navTab} ${styles.active}`}>Shop</button>
-          <button 
-            className={styles.navTab}
-            onClick={() => navigate(`/about/${id}`)}
-          >
-            About
-          </button>
-        </div>
+        <NavTabs activeTab="shop" customerId={id} />
 
         <div className={styles.header}>
           <h1>Shop</h1>

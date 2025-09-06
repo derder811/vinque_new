@@ -21,6 +21,7 @@ import SellerPage from "./Page/SellerPage/SellerPage";
 import SPAddItem from "./Page/SellerPage/AddItem/SellerPageAddItem";
 import SPViewItems from "./Page/SellerPage/ViewItems/SellerPageViewItems";
 import SPEditItem from "./Page/SellerPage/EditItem/SellerPageEditItem";
+import SellerEditProfile from "./Page/SellerPage/EditProfile/SellerEditProfile";
 import SellerOrderManagement from "./Page/SellerPage/OrderManagement/SellerOrderManagement";
 import OTPVerification from "./Page/OTPVerification/OTPVerification";
 import ShopPage from "./Page/HomePage/ShopPage/ShopPage";
@@ -54,6 +55,7 @@ function App() {
         <Route path="/seller/add-item/:id" element={<SPAddItem />} />
         <Route path="/seller/view-items/:id" element={<SPViewItems />} />
         <Route path="/seller/edit-item/:id" element={<SPEditItem />} />
+        <Route path="/seller/edit-profile/:id" element={<SellerEditProfile />} />
         <Route path="/seller/orders/:id" element={<SellerOrderManagement />} />
         
         {/* Admin Route */}

@@ -24,6 +24,28 @@
   position: relative;
 }
 
+.editProfileBtn {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--theme-dark);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  z-index: 10;
+}
+
+.editProfileBtn:hover {
+  background-color: #654e32;
+}
+
 
 
 .profileWrapper {

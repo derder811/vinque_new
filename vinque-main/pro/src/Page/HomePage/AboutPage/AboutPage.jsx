@@ -1,6 +1,7 @@
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../../../Compo/Header/Header";
+import NavTabs from "../../../Compo/NavTabs/NavTabs";
 import styles from "./AboutPage.module.css";
 
 export default function AboutPage() {
@@ -11,22 +12,7 @@ export default function AboutPage() {
     <>
       <Header isSeller={false} showSearchBar={true} showItems={true} />
       <div className={styles.container}>
-        {/* Navigation Tabs */}
-        <div className={styles.navTabs}>
-          <button 
-            className={styles.navTab}
-            onClick={() => navigate(`/home/${id}`)}
-          >
-            Home
-          </button>
-          <button 
-            className={styles.navTab}
-            onClick={() => navigate(`/shop/${id}`)}
-          >
-            Shop
-          </button>
-          <button className={`${styles.navTab} ${styles.active}`}>About</button>
-        </div>
+        <NavTabs activeTab="about" customerId={id} />
 
         <div className={styles.aboutContent}>
           <div className={styles.header}>

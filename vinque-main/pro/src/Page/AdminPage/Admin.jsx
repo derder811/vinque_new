@@ -401,58 +401,74 @@ export default function AdminPage() {
                   <i className="bi bi-person-plus"></i>
                   Seller Applications
                 </h2>
-                <div className={styles.tableContainer}>
-                  <div className={styles.table}>
-                    <div className={styles.tableHeader}>
-                      <div>Application ID</div>
-                      <div>Business Name</div>
-                      <div>Owner Name</div>
-                      <div>Email</div>
-                      <div>Phone</div>
-                      <div>Business Number</div>
-                      <div>Status</div>
-                      <div>Actions</div>
+                <div className={styles.sellerApplicationsContainer}>
+                  {pendingSellers.length === 0 ? (
+                    <div style={{textAlign: 'center', padding: '20px', color: '#666'}}>
+                      No pending seller applications
                     </div>
-                    <div className={styles.scrollableTable}>
-                      {pendingSellers.length === 0 ? (
-                        <div className={styles.tableRow}>
-                          <div colSpan="8" style={{textAlign: 'center', padding: '20px', color: '#666'}}>
-                            No pending seller applications
+                  ) : (
+                    <div className={styles.sellerCardsGrid}>
+                      {pendingSellers.map((seller) => (
+                        <div key={seller.user_id} className={styles.sellerCard}>
+                          <div className={styles.sellerCardHeader}>
+                            <h3>{seller.business_name}</h3>
+                            <span className={`${styles.roleBadge} ${styles.pending}`}>
+                              {seller.approval_status}
+                            </span>
+                          </div>
+                          <div className={styles.sellerCardContent}>
+                            <div className={styles.sellerCardRow}>
+                              <span className={styles.sellerCardLabel}>Application ID:</span>
+                              <span>{seller.user_id}</span>
+                            </div>
+                            <div className={styles.sellerCardRow}>
+                              <span className={styles.sellerCardLabel}>Owner:</span>
+                              <span>{seller.First_name} {seller.Last_name}</span>
+                            </div>
+                            <div className={styles.sellerCardRow}>
+                              <span className={styles.sellerCardLabel}>Email:</span>
+                              <span>{seller.email}</span>
+                            </div>
+                            <div className={styles.sellerCardRow}>
+                              <span className={styles.sellerCardLabel}>Phone:</span>
+                              <span>{seller.phone_num}</span>
+                            </div>
+                            <div className={styles.sellerCardRow}>
+                              <span className={styles.sellerCardLabel}>PayPal Number:</span>
+                              <span>{seller.paypal_number || 'N/A'}</span>
+                            </div>
+                            <div className={styles.sellerCardRow}>
+                              <span className={styles.sellerCardLabel}>Business Permit:</span>
+                              {seller.business_permit ? (
+                                <a 
+                                  href={`${import.meta.env.VITE_API_URL || ''}/uploads/${seller.business_permit}`} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className={styles.viewPermitLink}
+                                >
+                                  View Permit
+                                </a>
+                              ) : 'N/A'}
+                            </div>
+                          </div>
+                          <div className={styles.sellerCardActions}>
+                            <button 
+                              className={styles.approveBtn}
+                              onClick={() => handleApproveSeller(seller.user_id)}
+                            >
+                              Approve
+                            </button>
+                            <button 
+                              className={styles.rejectBtn}
+                              onClick={() => handleRejectSeller(seller.user_id)}
+                            >
+                              Reject
+                            </button>
                           </div>
                         </div>
-                      ) : (
-                        pendingSellers.map((seller) => (
-                          <div key={seller.user_id} className={styles.tableRow}>
-                            <div>{seller.user_id}</div>
-                            <div>{seller.business_name}</div>
-                            <div>{seller.First_name} {seller.Last_name}</div>
-                            <div>{seller.email}</div>
-                            <div>{seller.phone_num}</div>
-                            <div>{seller.business_number || 'N/A'}</div>
-                            <div>
-                              <span className={`${styles.roleBadge} ${styles.pending}`}>
-                                {seller.approval_status}
-                              </span>
-                            </div>
-                            <div>
-                              <button 
-                                className={styles.approveBtn}
-                                onClick={() => handleApproveSeller(seller.user_id)}
-                              >
-                                Approve
-                              </button>
-                              <button 
-                                className={styles.rejectBtn}
-                                onClick={() => handleRejectSeller(seller.user_id)}
-                              >
-                                Reject
-                              </button>
-                            </div>
-                          </div>
-                        ))
-                      )}
+                      ))}
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </>

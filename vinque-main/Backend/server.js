@@ -14,6 +14,7 @@ import nodemailer from 'nodemailer'; // Import nodemailer for OTP emails
 // For production, these should be environment variables.
 const PORT = process.env.PORT || 3000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5176';
+const ALLOWED_ORIGINS = ['http://localhost:5176', 'http://localhost:5177', 'http://localhost:5178'];
 
 // Email configuration for OTP
 const transporter = nodemailer.createTransport({
@@ -67,9 +68,14 @@ const app = express();
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, 'uploads');
+const businessPermitsDir = path.join(__dirname, 'uploads', 'business_permits');
 if (!fs.existsSync(uploadsDir)) {
     console.log(`Creating uploads directory: ${uploadsDir}`);
     fs.mkdirSync(uploadsDir, { recursive: true });
+}
+if (!fs.existsSync(businessPermitsDir)) {
+    console.log(`Creating business permits directory: ${businessPermitsDir}`);
+    fs.mkdirSync(businessPermitsDir, { recursive: true });
 }
 
 // Multer storage configuration
@@ -87,8 +93,17 @@ const storage = multer.diskStorage({
 });
 
 // Multer file filter to accept only images
-const fileFilter = (req, file, cb) => {
+const imageFileFilter = (req, file, cb) => {
     if (file.mimetype.startsWith('image/')) {
+        cb(null, true);
+    } else {
+        cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', file.fieldname), false); // Use MulterError for consistency
+    }
+};
+
+// Multer file filter to accept PDF files for business permits
+const pdfFileFilter = (req, file, cb) => {
+    if (file.mimetype === 'application/pdf') {
         cb(null, true);
     } else {
         cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', file.fieldname), false); // Use MulterError for consistency
@@ -98,7 +113,7 @@ const fileFilter = (req, file, cb) => {
 //multer for profile_pic on the profile-page
 const upload_profile = multer({
     storage: storage,
-    fileFilter: fileFilter,
+    fileFilter: imageFileFilter,
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB file size limit
 }).fields([
     { name: 'profile_image', maxCount: 1 }
@@ -109,12 +124,30 @@ const upload_profile = multer({
 //this is for other image for other pages don't change
 const upload = multer({
     storage: storage,
-    fileFilter: fileFilter,
+    fileFilter: imageFileFilter,
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB file size limit
 }).fields([
     { name: 'image1', maxCount: 1 },
     { name: 'image2', maxCount: 1 },
     { name: 'image3', maxCount: 1 }
+]);
+
+// Multer configuration for business permit uploads
+const businessPermitStorage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, businessPermitsDir);
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + file.originalname);
+    }
+});
+
+const upload_business_permit = multer({
+    storage: businessPermitStorage,
+    fileFilter: pdfFileFilter,
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB file size limit for PDFs
+}).fields([
+    { name: 'businessPermit', maxCount: 1 }
 ]);
 
 // Security headers
@@ -127,7 +160,7 @@ app.use((req, res, next) => {
 
 // CORS setup
 app.use(cors({
-    origin: [FRONTEND_URL, 'http://localhost:5176', 'http://localhost:5177'],
+    origin: ALLOWED_ORIGINS,
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true
@@ -139,9 +172,8 @@ app.use(express.urlencoded({ extended: true }));
 
 // Serve static files from 'uploads' directory with proper CORS and MIME headers
 app.use("/uploads", (req, res, next) => {
-    const allowedOrigins = [FRONTEND_URL, 'http://localhost:5176', 'http://localhost:5177'];
     const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) {
+    if (ALLOWED_ORIGINS.includes(origin)) {
         res.header('Access-Control-Allow-Origin', origin);
     }
     res.header('Access-Control-Allow-Methods', 'GET');
@@ -202,7 +234,7 @@ app.get("/api/admin/pending-sellers", async (req, res) => {
     try {
         connection = await pool.getConnection();
         const [rows] = await connection.query(
-            `SELECT s.user_id, s.business_name, s.First_name, s.Last_name, s.email, s.phone_num, s.approval_status, a.Business_Permit as business_number
+            `SELECT s.user_id, s.business_name, s.First_name, s.Last_name, s.email, s.phone_num, s.paypal_number, s.approval_status, a.Business_Permit as business_permit
              FROM seller_tb s
              LEFT JOIN accounts a ON s.user_id = a.user_id
              WHERE s.approval_status = 'pending' 
@@ -282,7 +314,7 @@ app.put("/api/admin/reject-seller/:userId", async (req, res) => {
 
 
 // Signup route
-app.post("/api/signup", async (req, res) => {
+app.post("/api/signup", upload_business_permit, async (req, res) => {
   let connection;
   try {
     const {
@@ -350,27 +382,33 @@ app.post("/api/signup", async (req, res) => {
     // Business permit validation
     let finalBusinessPermit = null;
     if (role === "Seller") {
-      if (!businessPermit?.trim()) {
+      // Check if business permit file was uploaded
+      if (!req.files || !req.files.businessPermit || !req.files.businessPermit[0]) {
         await connection.rollback();
         return res.status(400).json({
           status: "error",
-          message: "Business permit is required for sellers.",
+          message: "Business permit file is required for sellers.",
         });
       }
-
+      
+      // Get the uploaded file path relative to uploads directory
+      const businessPermitFile = req.files.businessPermit[0];
+      finalBusinessPermit = `business_permits/${businessPermitFile.filename}`;
+      
+      // Check if this business permit has been used before
       const [[permitUsed]] = await connection.query(
         "SELECT user_id FROM accounts WHERE Business_Permit = ?",
-        [businessPermit.trim()]
+        [finalBusinessPermit]
       );
       if (permitUsed) {
+        // Delete the uploaded file if it's a duplicate
+        fs.unlinkSync(businessPermitFile.path);
         await connection.rollback();
         return res.status(409).json({
           status: "error",
           message: "Business permit already in use.",
         });
       }
-
-      finalBusinessPermit = businessPermit.trim();
     }
 
     const hashedPassword = await bcrypt.hash(password.trim(), 10);
@@ -385,10 +423,11 @@ app.post("/api/signup", async (req, res) => {
 
     // Insert into role-specific table
     if (role === "Seller") {
+      const paypal_number = req.body.paypal_number || null;
       await connection.query(
         `INSERT INTO seller_tb 
-        (user_id, business_name, First_name, Last_name, business_address, email, phone_num, business_number, approval_status) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+        (user_id, business_name, First_name, Last_name, business_address, email, phone_num, paypal_number, business_number, approval_status) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
         [
           user_id,
           name.trim(),
@@ -397,6 +436,7 @@ app.post("/api/signup", async (req, res) => {
           address.trim(),
           email.trim(),
           phone.trim(),
+          paypal_number,
           finalBusinessPermit,
         ]
       );
@@ -2204,6 +2244,82 @@ app.get("/api/store/:id", async (req, res) => {
   } finally {
     if (connection) connection.release();
   }
+});
+
+// Update seller profile
+// Express Backend Route: PUT /api/seller/update/:id
+app.put("/api/seller/update/:id", (req, res, next) => {
+  upload_profile(req, res, async function (err) {
+    if (err) {
+      console.error("Multer error:", err);
+      return res.status(400).json({ success: false, error: err.message });
+    }
+
+    const { id } = req.params;
+    const { business_name, business_description, business_address, phone_num } = req.body;
+
+    const seller_image =
+      req.files && req.files["profile_image"] && req.files["profile_image"].length > 0
+        ? req.files["profile_image"][0].filename
+        : null;
+
+    let connection;
+
+    try {
+      connection = await pool.getConnection();
+      await connection.beginTransaction();
+
+      // Check if seller exists
+      const [sellerResult] = await connection.query(
+        "SELECT seller_id FROM seller_tb WHERE seller_id = ?",
+        [id]
+      );
+
+      if (!sellerResult || sellerResult.length === 0) {
+        await connection.rollback();
+        if (seller_image) {
+          const filePath = req.files["profile_image"][0].path;
+          fs.unlink(filePath, (err) => {
+            if (err) console.error("Failed to delete orphaned image:", err);
+          });
+        }
+        return res.status(404).json({ success: false, error: "Seller not found" });
+      }
+
+      let updateQuery = `
+        UPDATE seller_tb
+        SET business_name = ?, business_description = ?, business_address = ?, phone_num = ?
+        ${seller_image ? ", seller_image = ?" : ""}
+        WHERE seller_id = ?
+      `;
+
+      const updateValues = [business_name, business_description, business_address, phone_num];
+      if (seller_image) updateValues.push(seller_image);
+      updateValues.push(id);
+
+      await connection.query(updateQuery, updateValues);
+
+      await connection.commit();
+
+      res.json({
+        success: true,
+        message: "Seller profile updated successfully",
+        seller_image: seller_image ? `/uploads/${seller_image}` : null,
+      });
+    } catch (err) {
+      if (connection) await connection.rollback();
+      console.error("Error during seller profile update:", err);
+      if (seller_image) {
+        const filePath = req.files["profile_image"][0].path;
+        fs.unlink(filePath, (err) => {
+          if (err) console.error("Failed to delete image after error:", err);
+        });
+      }
+      res.status(500).json({ success: false, error: "Internal server error" });
+    } finally {
+      if (connection) connection.release();
+    }
+  });
 });
 
 

@@ -5,6 +5,7 @@ import Card from "../../Compo/CardItem/CardItem.jsx";
 import Header from "../../Compo/Header/Header.jsx";
 import Category from "../../Compo/CategoryNav/CategoryNav.jsx";
 import Footer from "../../Compo/Footer/Footer.jsx";
+import NavTabs from "../../Compo/NavTabs/NavTabs.jsx";
 import styles from "./HomePage.module.css";
 
 export default function HomePage() {
@@ -123,21 +124,7 @@ export default function HomePage() {
       <Header isSeller={false} onSearch={handleSearch} showItems={true} />
       
       {/* Navigation Tabs */}
-      <div className={styles.navTabs}>
-        <button className={`${styles.navTab} ${styles.active}`}>Home</button>
-        <button 
-          className={styles.navTab}
-          onClick={() => navigate(`/shop/${customerId}`)}
-        >
-          Shop
-        </button>
-        <button 
-          className={styles.navTab}
-          onClick={() => navigate(`/about/${customerId}`)}
-        >
-          About
-        </button>
-      </div>
+      <NavTabs activeTab="home" customerId={customerId} />
 
       {/* Category Filter Tabs */}
       <div ref={categoryRef} className={`${styles.categoryTabs} ${styles.appearItem}`}>
