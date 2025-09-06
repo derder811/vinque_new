@@ -580,8 +580,13 @@ app.post("/api/google-signup", async (req, res) => {
     // Check if user already exists by email
     console.log('🔍 Checking for existing user with email:', email.trim());
     const [existingUsers] = await connection.query(
-      "SELECT user_id, username, role FROM accounts WHERE LOWER(username) = LOWER(?) OR user_id IN (SELECT user_id FROM customer_tb WHERE email = ?)",
-      [email.trim(), email.trim()]
+      `SELECT a.user_id, a.username, a.role 
+       FROM accounts a 
+       WHERE LOWER(a.username) = LOWER(?) 
+       OR a.user_id IN (SELECT user_id FROM customer_tb WHERE email = ?)
+       OR a.user_id IN (SELECT user_id FROM seller_tb WHERE email = ?)
+      `,
+      [email.trim(), email.trim(), email.trim()]
     );
     console.log('📋 Existing users found:', existingUsers);
 
@@ -633,6 +638,25 @@ app.post("/api/google-signup", async (req, res) => {
         customer_id = customerResult[0].customer_id;
         firstName = customerResult[0].First_name;
         lastName = customerResult[0].Last_name;
+      }
+    } else if (user.role === "Seller") {
+      const [sellerResult] = await connection.query(
+        "SELECT seller_id, First_name, Last_name, approval_status FROM seller_tb WHERE user_id = ? LIMIT 1",
+        [user.user_id]
+      );
+      if (sellerResult.length > 0) {
+        // Check if seller is approved
+        if (sellerResult[0].approval_status !== 'approved') {
+          await connection.commit();
+          return res.status(403).json({ 
+            status: "error", 
+            message: "Your seller account is pending approval. Please wait for admin approval before logging in." 
+          });
+        }
+        
+        seller_id = sellerResult[0].seller_id;
+        firstName = sellerResult[0].First_name;
+        lastName = sellerResult[0].Last_name;
       }
     }
 

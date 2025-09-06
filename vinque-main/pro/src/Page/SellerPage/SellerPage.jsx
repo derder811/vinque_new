@@ -51,7 +51,8 @@ export default function SellerPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const sellerId = localStorage.getItem("seller_id") || "1";
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const sellerId = user?.seller_id || localStorage.getItem("seller_id") || "14";
 
   const pieData = {
     labels: stats.categories.map(c => c.category),
@@ -135,17 +136,32 @@ export default function SellerPage() {
   };
 
   useEffect(() => {
+    console.log('SellerPage component mounted, sellerId:', sellerId);
     const fetchData = async () => {
       setLoading(true);
       try {
+        console.log('Fetching data from API endpoints...');
         // Fetch both stats and revenue data
+        const apiUrl = import.meta.env.VITE_API_URL || '';
+        const statsEndpoint = `${apiUrl}/api/seller-stats/${sellerId}`;
+        const revenueEndpoint = `${apiUrl}/api/seller-revenue/${sellerId}`;
+        
+        console.log('Stats endpoint:', statsEndpoint);
+        console.log('Revenue endpoint:', revenueEndpoint);
+        
         const [statsRes, revenueRes] = await Promise.all([
-          fetch(`http://localhost:3000/api/seller-stats/${sellerId}`),
-          fetch(`http://localhost:3000/api/seller-revenue/${sellerId}`)
+          fetch(statsEndpoint),
+          fetch(revenueEndpoint)
         ]);
+        
+        console.log('Stats response status:', statsRes.status);
+        console.log('Revenue response status:', revenueRes.status);
         
         const statsJson = await statsRes.json();
         const revenueJson = await revenueRes.json();
+        
+        console.log('Stats response data:', statsJson);
+        console.log('Revenue response data:', revenueJson);
 
         if (statsJson.status === "success") {
           const {
@@ -169,12 +185,15 @@ export default function SellerPage() {
             mostViewedItem,
           });
           setMonthlyVisits(visitsByMonth || []);
+          console.log('Stats data processed successfully');
         } else {
+          console.error('Stats data error:', statsJson.message);
           setError(statsJson.message || "Failed to load stats.");
         }
 
         if (revenueJson.status === "success") {
           setRevenueData(revenueJson.data);
+          console.log('Revenue data processed successfully');
         } else {
           console.warn("Revenue data not available:", revenueJson.message);
         }
@@ -183,6 +202,7 @@ export default function SellerPage() {
         setError("Unable to fetch data.");
       } finally {
         setLoading(false);
+        console.log('Data fetching completed, loading state set to false');
       }
     };
 
@@ -190,42 +210,76 @@ export default function SellerPage() {
   }, [sellerId]);
 
   if (loading) {
+    console.log('Rendering loading state');
     return (
-      <>
+      <div className={styles.container}>
         <Header showSearchBar={false} showItems={false} isSeller={true} />
-        <div className={styles.container}>
+        <div className={styles.content}>
           <Sidebar />
-          <main className={styles.content}>
-            <div className="container-fluid py-3 text-center">Loading...</div>
+          <main className={styles.dashboardMain}>
+            <div className="d-flex justify-content-center align-items-center" style={{ height: "70vh" }}>
+              <div className="text-center">
+                <div className="spinner-border text-primary" role="status" style={{ width: "3rem", height: "3rem" }}>
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <p className="mt-3">Loading your dashboard...</p>
+              </div>
+            </div>
           </main>
         </div>
-      </>
+      </div>
     );
   }
 
   if (error) {
+    console.log('Rendering error state:', error);
     return (
-      <>
+      <div className={styles.container}>
         <Header showSearchBar={false} showItems={false} isSeller={true} />
-        <div className={styles.container}>
+        <div className={styles.content}>
           <Sidebar />
-          <main className={styles.content}>
-            <div className="container-fluid py-3 text-center text-danger">{error}</div>
+          <main className={styles.dashboardMain}>
+            <div className="d-flex justify-content-center align-items-center" style={{ height: "70vh" }}>
+              <div className="text-center text-danger">
+                <i className="bi bi-exclamation-triangle-fill" style={{ fontSize: "3rem" }}></i>
+                <p className="mt-3">{error}</p>
+                <button
+                  className="btn btn-outline-danger mt-2"
+                  onClick={() => window.location.reload()}
+                >
+                  <i className="bi bi-arrow-clockwise me-2"></i>Retry
+                </button>
+              </div>
+            </div>
           </main>
         </div>
-      </>
+      </div>
     );
   }
 
+  console.log('Rendering SellerPage component with state:', {
+    username,
+    stats,
+    monthlyVisits,
+    revenueData,
+    loading,
+    error,
+    sellerId
+  });
+  
   return (
-    <>
+    <div className={styles.container}>
+      {console.log('Rendering container')}
       <Header showSearchBar={false} showItems={false} isSeller={true} />
-      <div className={styles.container}>
+      {console.log('Rendered Header')}
+      <div className={styles.content}>
+        {console.log('Rendering content')}
         <Sidebar />
-        <main className={styles.content}>
+        {console.log('Rendered Sidebar')}
+        <main className={styles.dashboardMain}>
           <div className="container-fluid py-3">
-            <h2 className="text-center mb-4">Seller {username} Dashboard</h2>
-            <p className="text-muted text-center">Welcome {username}! Here’s your dashboard overview.</p>
+            <h2 className="text-center mb-4">{username}'s Dashboard</h2>
+            <p className="text-muted text-center">Welcome {username}! Here's your dashboard overview.</p>
 
             {/* Stats Cards */}
             <div className="row g-3 mb-4">
@@ -236,12 +290,12 @@ export default function SellerPage() {
                 { icon: "bi-fire", label: "Trending", value: stats.trending, color: "text-danger" },
               ].map((item, i) => (
                 <div className="col-12 col-sm-6 col-md-4 col-lg-3" key={i}>
-                  <div className="card text-center shadow-sm h-100">
+                  <div className="card text-center shadow-sm h-100" style={{ backgroundColor: '#f8f5e6', borderRadius: '12px' }}>
                     <div className="card-body">
                       <h5 className={`card-title ${item.color}`}>
                         <i className={`bi ${item.icon} me-2`}></i>{item.label}
                       </h5>
-                      <p className="fs-3 fw-bold">{item.value}</p>
+                      <p className="fs-3 fw-bold" style={{ color: '#3a3320' }}>{item.value}</p>
                     </div>
                   </div>
                 </div>
@@ -251,19 +305,23 @@ export default function SellerPage() {
             {/* Most Viewed + Categories */}
             <div className="row g-3 mb-4">
               <div className="col-lg-8">
-                <div className="card h-100 shadow-sm">
-                  <div className="card-header bg-dark text-white">Most Viewed Item</div>
+                <div className="card h-100 shadow-sm" style={{ backgroundColor: '#f8f5e6', borderRadius: '12px' }}>
+                  <div className="card-header" style={{ backgroundColor: '#3a3320', color: '#fff', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>Most Viewed Item</div>
                   <div className="card-body text-center">
                     {stats.mostViewedItem ? (
                       <>
                         <img
-                          src={stats.mostViewedItem.image1_path.startsWith('/uploads/') ? stats.mostViewedItem.image1_path : `/uploads/${stats.mostViewedItem.image1_path}`}
-                          alt={stats.mostViewedItem.product_name}
+                          src={stats.mostViewedItem.image1_path && stats.mostViewedItem.image1_path.startsWith('/uploads/') 
+                            ? stats.mostViewedItem.image1_path 
+                            : stats.mostViewedItem.image1_path 
+                              ? `/uploads/${stats.mostViewedItem.image1_path}` 
+                              : 'https://placehold.co/400x300?text=No+Image'}
+                          alt={stats.mostViewedItem.product_name || 'Product'}
                           className="img-fluid mb-3"
                           style={{ maxHeight: "300px" }}
                         />
-                        <h5>{stats.mostViewedItem.product_name}</h5>
-                        <p>{stats.mostViewedItem.description}</p>
+                        <h5>{stats.mostViewedItem.product_name || 'Unnamed Product'}</h5>
+                        <p>{stats.mostViewedItem.description || 'No description available.'}</p>
                       </>
                     ) : (
                       <p>No most viewed item data.</p>
@@ -272,8 +330,8 @@ export default function SellerPage() {
                 </div>
               </div>
               <div className="col-lg-4">
-                <div className="card h-100 shadow-sm">
-                  <div className="card-header bg-secondary text-white">Product Categories</div>
+                <div className="card h-100 shadow-sm" style={{ backgroundColor: '#f8f5e6', borderRadius: '12px' }}>
+                  <div className="card-header" style={{ backgroundColor: '#3a3320', color: '#fff', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>Product Categories</div>
                   <div className="card-body d-flex justify-content-center align-items-center">
                     {stats.categories.length > 0 ? (
                       <Pie data={pieData} />
@@ -369,22 +427,22 @@ export default function SellerPage() {
             {/* Quick Access */}
             <div className="row g-3">
               <div className="col-lg-12">
-                <div className="card shadow-sm">
-                  <div className="card-header bg-secondary text-white">Quick Access</div>
-                  <div className="list-group list-group-flush">
-                    <a href={`/seller/add-item/${sellerId}`} className="list-group-item list-group-item-action">
+                <div className="card shadow-sm" style={{ backgroundColor: '#f8f5e6', borderRadius: '12px' }}>
+                  <div className="card-header" style={{ backgroundColor: '#3a3320', color: '#fff', borderTopLeftRadius: '12px', borderTopRightRadius: '12px' }}>Quick Access</div>
+                  <div className="list-group list-group-flush" style={{ backgroundColor: '#f8f5e6' }}>
+                    <a href={`/seller/add-item/${sellerId}`} className="list-group-item list-group-item-action" style={{ backgroundColor: '#f8f5e6', color: '#3a3320', borderColor: '#e5dfc4' }}>
                       <i className="bi bi-plus-circle me-2"></i> Add New Product
                     </a>
-                    <a href={`/seller/view-items/${sellerId}`} className="list-group-item list-group-item-action">
-                      <i className="bi bi-list-check me-2"></i> View All Listings
+                    <a href={`/seller/view-items/${sellerId}`} className="list-group-item list-group-item-action" style={{ backgroundColor: '#f8f5e6', color: '#3a3320', borderColor: '#e5dfc4' }}>
+                      <i className="bi bi-list-check me-2"></i> Manage Products
                     </a>
-                    <a href={`/seller/orders/${sellerId}`} className="list-group-item list-group-item-action">
-                      <i className="bi bi-clipboard-check me-2"></i> Manage Orders
+                    <a href={`/seller/orders/${sellerId}`} className="list-group-item list-group-item-action" style={{ backgroundColor: '#f8f5e6', color: '#3a3320', borderColor: '#e5dfc4' }}>
+                      <i className="bi bi-clipboard-check me-2"></i> View Orders
                     </a>
-                    <a href="#" className="list-group-item list-group-item-action">
+                    <a href="#" className="list-group-item list-group-item-action" style={{ backgroundColor: '#f8f5e6', color: '#3a3320', borderColor: '#e5dfc4' }}>
                       <i className="bi bi-graph-up me-2"></i> View Sales Reports
                     </a>
-                    <a href="#" className="list-group-item list-group-item-action">
+                    <a href="#" className="list-group-item list-group-item-action" style={{ backgroundColor: '#f8f5e6', color: '#3a3320', borderColor: '#e5dfc4' }}>
                       <i className="bi bi-gear me-2"></i> Account Settings
                     </a>
                   </div>
@@ -395,6 +453,6 @@ export default function SellerPage() {
           </div>
         </main>
       </div>
-    </>
+    </div>
   );
 }

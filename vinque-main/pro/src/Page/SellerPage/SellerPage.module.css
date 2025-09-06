@@ -6,25 +6,38 @@
 /* ----- MAIN LAYOUT ----- */
 .container {
   display: flex;
-  flex-direction: row;
+  flex-direction: column;
   min-height: calc(100vh - var(--header-height));
   overflow: hidden;
+  background-color: #efe8d1;
+  position: relative;
+  z-index: 1;
 }
 
 .content {
+  display: flex;
+  flex-direction: row;
   flex-grow: 1;
-  padding: 2rem;
   background-color: #efe8d1;
-  overflow-y: auto;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
 }
 
-.content h2 {
+.dashboardMain {
+  flex-grow: 1;
+  padding: 2rem;
+  overflow-y: auto;
+  width: calc(100% - 180px);
+}
+
+.dashboardMain h2 {
   color: #3a3320;
   margin-bottom: 1rem;
   font-size: 2rem;
 }
 
-.content p {
+.dashboardMain p {
   color: #6d5e2c;
   line-height: 1.6;
   font-size: 1rem;
@@ -51,42 +64,44 @@
 
 /* ----- RESPONSIVE STYLES FOR TABLET & MOBILE ----- */
 @media (max-width: 991px) {
-  .content {
+  .dashboardMain {
     padding: 1.5rem;
+    width: calc(100% - 180px);
   }
 }
 
 @media (max-width: 767px) {
-  .container {
-    flex-direction: column;
-    padding-bottom: var(--mobile-sidebar-height);
-    box-sizing: border-box;
-  }
-
   .content {
-    padding: 1rem;
+    flex-direction: column;
   }
-
-  .content h2 {
+  
+  .dashboardMain {
+    width: 100%;
+    padding: 1rem;
+    padding-bottom: calc(var(--mobile-sidebar-height) + 1rem);
+    order: 2;
+  }
+  
+  .dashboardMain h2 {
     font-size: 1.3rem;
   }
 
-  .content p {
+  .dashboardMain p {
     font-size: 0.9rem;
   }
 }
 
 /* ----- EXTRA MOBILE SPECIFIC (e.g., 480px) ----- */
 @media (max-width: 480px) {
-  .content {
+  .dashboardMain {
     padding: 0.8rem;
   }
 
-  .content h2 {
+  .dashboardMain h2 {
     font-size: 1.1rem;
   }
 
-  .content p {
+  .dashboardMain p {
     font-size: 0.85rem;
   }
 

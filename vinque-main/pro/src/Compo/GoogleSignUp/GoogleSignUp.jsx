@@ -60,15 +60,14 @@ export default function GoogleSignUp() {
             localStorage.setItem("seller_id", user.seller_id.toString());
           }
 
-          if (user.role === "Seller") {
-            if (user.seller_id) {
-              navigate(`/seller/home/${user.seller_id}`);
-            } else {
-              // Handle pending seller approval case
-              alert("Your seller account is pending approval. Please wait for admin approval before accessing seller features.");
-              navigate("/login");
-            }
-          } else {
+          // For Seller role, navigate to seller home page
+          if (user.role === 'Seller') {
+            // Use seller_id for navigation if available, otherwise use user_id
+            const navigationId = user.seller_id || user.user_id;
+            navigate(`/seller/home/${navigationId}`);
+          }
+          // For Customer role, navigate to customer home page
+          else if (user.role === 'Customer') {
             navigate(`/home/${user.customer_id}`);
           }
         }

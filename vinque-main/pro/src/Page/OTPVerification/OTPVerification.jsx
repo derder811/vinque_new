@@ -96,7 +96,9 @@ export default function OTPVerification() {
 
         // Navigate to appropriate dashboard
         if (userData.role === 'Seller') {
-          navigate(`/seller/home/${userData.user_id}`);
+          // Use seller_id for navigation if available, otherwise use user_id
+          const navigationId = userData.seller_id || userData.user_id;
+          navigate(`/seller/home/${navigationId}`);
         } else if (userData.role === 'Customer') {
           navigate(`/home/${userData.user_id}`);
         } else if (isNewUser) {
