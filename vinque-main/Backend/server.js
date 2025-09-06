@@ -13,7 +13,7 @@ import nodemailer from 'nodemailer'; // Import nodemailer for OTP emails
 // CONFIG
 // For production, these should be environment variables.
 const PORT = process.env.PORT || 3000;
-const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5176';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5177';
 const ALLOWED_ORIGINS = ['http://localhost:5176', 'http://localhost:5177', 'http://localhost:5178'];
 
 // Email configuration for OTP
