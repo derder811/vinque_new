@@ -18,6 +18,18 @@
   width: 100%;
   max-width: 420px;
   animation: fadeIn 0.5s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.welcome-title {
+  font-size: 2.2rem;
+  color: #a68b5b;
+  margin-bottom: 1rem;
+  text-align: center;
+  font-weight: 700;
+  letter-spacing: 1px;
 }
 
 .form-title {
@@ -142,6 +154,38 @@
 
 .reset-btn:hover {
   color: #005999;
+}
+
+.google-login-container {
+  width: 100%;
+  margin: 1.5rem 0;
+  display: flex;
+  justify-content: center;
+}
+
+.sign-in-text {
+  color: #666;
+  text-align: center;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+}
+
+.terms-text {
+  color: #888;
+  font-size: 0.85rem;
+  text-align: center;
+  margin-top: 1.5rem;
+}
+
+.terms-link {
+  color: #a68b5b;
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.terms-link:hover {
+  color: #8a7349;
+  text-decoration: underline;
 }
 /* Error message */
 .error-message {

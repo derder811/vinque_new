@@ -42,6 +42,21 @@ html, body {
   letter-spacing: 1px;
 }
 
+.google-info {
+  background-color: #e8f5e9;
+  border: 1px solid #c8e6c9;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.google-info p {
+  color: #2e7d32;
+  margin: 0;
+  font-size: 0.9rem;
+}
+
 .error-message {
   background-color: #ffebee;
   color: #c62828;

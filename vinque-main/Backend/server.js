@@ -14,7 +14,7 @@ import nodemailer from 'nodemailer'; // Import nodemailer for OTP emails
 // For production, these should be environment variables.
 const PORT = process.env.PORT || 3000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5177';
-const ALLOWED_ORIGINS = ['http://localhost:5176', 'http://localhost:5177', 'http://localhost:5178'];
+const ALLOWED_ORIGINS = ['http://localhost:5177'];
 
 // Email configuration for OTP
 const transporter = nodemailer.createTransport({
@@ -101,9 +101,9 @@ const imageFileFilter = (req, file, cb) => {
     }
 };
 
-// Multer file filter to accept PDF files for business permits
-const pdfFileFilter = (req, file, cb) => {
-    if (file.mimetype === 'application/pdf') {
+// Multer file filter to accept PDF files and images for business permits
+const businessPermitFileFilter = (req, file, cb) => {
+    if (file.mimetype === 'application/pdf' || file.mimetype.startsWith('image/')) {
         cb(null, true);
     } else {
         cb(new multer.MulterError('LIMIT_UNEXPECTED_FILE', file.fieldname), false); // Use MulterError for consistency
@@ -144,11 +144,9 @@ const businessPermitStorage = multer.diskStorage({
 
 const upload_business_permit = multer({
     storage: businessPermitStorage,
-    fileFilter: pdfFileFilter,
-    limits: { fileSize: 10 * 1024 * 1024 } // 10MB file size limit for PDFs
-}).fields([
-    { name: 'businessPermit', maxCount: 1 }
-]);
+    fileFilter: businessPermitFileFilter,
+    limits: { fileSize: 10 * 1024 * 1024 } // 10MB file size limit for PDFs and images
+}).single('businessPermit');
 
 // Security headers
 app.use((req, res, next) => {
@@ -234,7 +232,8 @@ app.get("/api/admin/pending-sellers", async (req, res) => {
     try {
         connection = await pool.getConnection();
         const [rows] = await connection.query(
-            `SELECT s.user_id, s.business_name, s.First_name, s.Last_name, s.email, s.phone_num, s.paypal_number, s.approval_status, a.Business_Permit as business_permit
+            `SELECT s.user_id, s.business_name, s.First_name, s.Last_name, s.email, s.phone_num, s.paypal_number, s.approval_status, 
+             s.business_permit_file, a.Business_Permit as business_permit
              FROM seller_tb s
              LEFT JOIN accounts a ON s.user_id = a.user_id
              WHERE s.approval_status = 'pending' 
@@ -314,11 +313,37 @@ app.put("/api/admin/reject-seller/:userId", async (req, res) => {
 
 
 // Signup route
-app.post("/api/signup", upload_business_permit, async (req, res) => {
+app.post("/api/signup", (req, res, next) => {
+  // Parse the form data to access fields before processing
+  const contentType = req.headers['content-type'] || '';
+  
+  // Log the request headers and body for debugging
+  console.log('Request headers:', req.headers);
+  console.log('Request body type:', typeof req.body);
+  console.log('Content-Type:', contentType);
+  
+  // For multipart form data, we need to check the role field differently
+  if (contentType.startsWith('multipart/form-data')) {
+    // Use multer to parse the multipart form data for seller role
+    upload_business_permit(req, res, (err) => {
+      if (err) {
+        console.error('Error uploading business permit:', err);
+        return res.status(400).json({
+          status: "error",
+          message: "Error uploading business permit. Please ensure it's a PDF or image file under 10MB."
+        });
+      }
+      next();
+    });
+  } else {
+    // For non-multipart requests, just proceed
+    next();
+  }
+}, async (req, res) => {
   let connection;
   try {
     const {
-      name,
+      username,
       password,
       email,
       role = "Customer",
@@ -329,14 +354,23 @@ app.post("/api/signup", upload_business_permit, async (req, res) => {
       address,
     } = req.body;
 
-    if (!name || !password || !email || !first_name || !last_name || !phone || !address) {
+    // Check if this is a Google user completing their profile
+    const fromGoogle = req.body.fromGoogle === 'true';
+    const googleUserId = req.body.googleUserId;
+    const googleId = req.body.googleId;
+    
+    console.log('Google signup data:', { fromGoogle, googleUserId, googleId });
+    
+    // For Google users, password is not required
+    if (!username || (!password && !fromGoogle) || !email || !first_name || !last_name || !phone || !address) {
       return res.status(400).json({
         status: "error",
         message: "All required fields must be filled.",
       });
     }
 
-    if (password.length < 8) {
+    // Skip password validation for Google users
+    if (!fromGoogle && password.length < 8) {
       return res.status(400).json({
         status: "error",
         message: "Password must be at least 8 characters.",
@@ -383,7 +417,7 @@ app.post("/api/signup", upload_business_permit, async (req, res) => {
     let finalBusinessPermit = null;
     if (role === "Seller") {
       // Check if business permit file was uploaded
-      if (!req.files || !req.files.businessPermit || !req.files.businessPermit[0]) {
+      if (!req.file) {
         await connection.rollback();
         return res.status(400).json({
           status: "error",
@@ -392,7 +426,7 @@ app.post("/api/signup", upload_business_permit, async (req, res) => {
       }
       
       // Get the uploaded file path relative to uploads directory
-      const businessPermitFile = req.files.businessPermit[0];
+      const businessPermitFile = req.file;
       finalBusinessPermit = `business_permits/${businessPermitFile.filename}`;
       
       // Check if this business permit has been used before
@@ -411,26 +445,29 @@ app.post("/api/signup", upload_business_permit, async (req, res) => {
       }
     }
 
-    const hashedPassword = await bcrypt.hash(password.trim(), 10);
+    // For Google users, use a placeholder password or the existing one
+    const hashedPassword = fromGoogle 
+      ? 'GOOGLE_OAUTH_USER' // Placeholder for Google users
+      : await bcrypt.hash(password.trim(), 10);
 
     // Insert into accounts
     const [accountResult] = await connection.query(
       "INSERT INTO accounts (username, password, role, Business_Permit) VALUES (?, ?, ?, ?)",
-      [name.trim(), hashedPassword, role, finalBusinessPermit]
+      [username.trim(), hashedPassword, role, finalBusinessPermit]
     );
 
     const user_id = accountResult.insertId;
 
     // Insert into role-specific table
     if (role === "Seller") {
-      const paypal_number = req.body.paypal_number || null;
+      const paypal_number = req.body.paypal || null;
       await connection.query(
         `INSERT INTO seller_tb 
-        (user_id, business_name, First_name, Last_name, business_address, email, phone_num, paypal_number, business_number, approval_status) 
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
+        (user_id, business_name, First_name, Last_name, business_address, email, phone_num, paypal_number, business_number, business_permit_file, approval_status) 
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending')`,
         [
           user_id,
-          name.trim(),
+          username.trim(),
           first_name.trim(),
           last_name.trim(),
           address.trim(),
@@ -438,6 +475,7 @@ app.post("/api/signup", upload_business_permit, async (req, res) => {
           phone.trim(),
           paypal_number,
           finalBusinessPermit,
+          finalBusinessPermit, // Store the business permit file path in the new column
         ]
       );
     } else if (role === "Customer") {
@@ -460,10 +498,23 @@ app.post("/api/signup", upload_business_permit, async (req, res) => {
     res.status(201).json({
       status: "success",
       message: "User registered successfully",
-      userId: user_id,
+      user: {
+        user_id: user_id,
+        role: role,
+        First_name: first_name.trim(),
+        Last_name: last_name.trim(),
+        email: email.trim()
+      }
     });
   } catch (err) {
+    console.error('Error in signup process:', err);
     if (connection) await connection.rollback();
+    
+    // Send a proper JSON error response
+    return res.status(500).json({
+      status: "error",
+      message: "An error occurred during signup. Please try again."
+    });
     console.error("Signup error:", err);
     res.status(500).json({
       status: "error",
@@ -542,35 +593,29 @@ app.post("/api/google-signup", async (req, res) => {
       console.log('✅ Existing user found, logging in directly');
       user = existingUsers[0];
     } else {
-      // Create new user
+      // Instead of auto-creating the account, mark as new user and return Google data
       isNewUser = true;
-      const username = email.split('@')[0]; // Use email prefix as username
-      const role = "Customer";
-
-      // Insert into accounts table (use placeholder password for Google OAuth)
-      const [accountResult] = await connection.query(
-        "INSERT INTO accounts (username, password, role) VALUES (?, ?, ?)",
-        [username, 'GOOGLE_OAUTH_USER', role] // Placeholder password for Google OAuth users
-      );
-
-      const user_id = accountResult.insertId;
-
-      // Parse name into first and last name
+      console.log('🆕 New Google user, will redirect to signup form');
+      
+      // Parse name into first and last name for the signup form
       const nameParts = name.trim().split(' ');
       const firstName = nameParts[0] || '';
       const lastName = nameParts.slice(1).join(' ') || '';
-
-      // Insert into customer_tb
-      await connection.query(
-        "INSERT INTO customer_tb (user_id, First_name, Last_name, email, profile_pic) VALUES (?, ?, ?, ?, ?)",
-        [user_id, firstName, lastName, email.trim(), picture || null]
-      );
-
-      user = {
-        user_id,
-        username,
-        role
-      };
+      
+      // Return temporary user object with Google data
+      await connection.commit();
+      return res.json({
+        status: "success",
+        message: "New Google user, please complete registration",
+        isNewUser: true,
+        user: {
+          email: email.trim(),
+          First_name: firstName,
+          Last_name: lastName,
+          googleId: googleId,
+          picture: picture || null
+        }
+      });
     }
 
     // Get additional user info

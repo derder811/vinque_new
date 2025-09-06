@@ -25,6 +25,19 @@ export default function GoogleSignUp() {
 
       if (response.ok && data.status === "success") {
         const user = data.user;
+        
+        // Always redirect new Google users to the signup form
+        if (data.isNewUser) {
+          console.log("Redirecting new Google user to signup form", user);
+          // Redirect to the sign-up form with Google user data
+          navigate("/signup", {
+            state: { 
+              user,
+              fromGoogle: true
+            }
+          });
+          return;
+        }
 
         if (data.requiresOTP) {
           navigate("/otp-verification", {
@@ -47,8 +60,14 @@ export default function GoogleSignUp() {
             localStorage.setItem("seller_id", user.seller_id.toString());
           }
 
-          if (user.role === "Seller" && user.seller_id) {
-            navigate(`/seller/home/${user.seller_id}`);
+          if (user.role === "Seller") {
+            if (user.seller_id) {
+              navigate(`/seller/home/${user.seller_id}`);
+            } else {
+              // Handle pending seller approval case
+              alert("Your seller account is pending approval. Please wait for admin approval before accessing seller features.");
+              navigate("/login");
+            }
           } else {
             navigate(`/home/${user.customer_id}`);
           }
@@ -70,18 +89,17 @@ export default function GoogleSignUp() {
 
   return (
     <div className={styles.googleSignUpWrapper}>
-      <div className={styles.divider}>
-        <span>Sign up or log in</span>
-      </div>
       <div className={styles.googleBtnContainer}>
         <GoogleLogin
           onSuccess={handleGoogleSuccess}
           onError={handleGoogleError}
-          text="continue_with"
-          shape="rectangular"
+          useOneTap
           theme="outline"
-          size="large"
-          width="100%"
+          text="signin_with"
+          shape="rectangular"
+          locale="en"
+          width="300px"
+          logo_alignment="center"
         />
       </div>
     </div>

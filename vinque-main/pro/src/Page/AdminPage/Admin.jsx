@@ -446,9 +446,23 @@ export default function AdminPage() {
                                   rel="noopener noreferrer"
                                   className={styles.viewPermitLink}
                                 >
-                                  View Permit
+                                  View Permit (Account)
                                 </a>
                               ) : 'N/A'}
+                              {seller.business_permit_file && seller.business_permit_file !== seller.business_permit && (
+                                <>
+                                  <br />
+                                  <a 
+                                    href={`${import.meta.env.VITE_API_URL || ''}/uploads/${seller.business_permit_file}`} 
+                                    target="_blank" 
+                                    rel="noopener noreferrer"
+                                    className={styles.viewPermitLink}
+                                    style={{ marginTop: '5px', display: 'inline-block' }}
+                                  >
+                                    View Permit (Seller)
+                                  </a>
+                                </>
+                              )}
                             </div>
                           </div>
                           <div className={styles.sellerCardActions}>
