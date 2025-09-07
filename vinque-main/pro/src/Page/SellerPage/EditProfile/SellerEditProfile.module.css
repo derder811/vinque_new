@@ -31,19 +31,8 @@
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
   padding: 30px;
   margin-bottom: 30px;
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.animateEnter {
-  animation: fadeIn 0.5s forwards;
-}
-
-@keyframes fadeIn {
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  opacity: 1;
+  /* Removed transform and animation for better performance */
 }
 
 .mainHeading {
@@ -72,7 +61,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: all 0.3s ease;
+  /* Removed transition for better performance */
 }
 
 .profileImageContainer:hover {
@@ -105,7 +94,7 @@
   padding: 5px 0;
   font-size: 12px;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  /* Removed transition for better performance */
 }
 
 .profileImageContainer:hover .changePhotoText {
@@ -133,6 +122,11 @@
   font-weight: 500;
 }
 
+.required {
+  color: #e53935;
+  margin-left: 3px;
+}
+
 .formInput,
 .formTextarea {
   width: 100%;
@@ -140,7 +134,7 @@
   border: 1px solid #ddd;
   border-radius: 4px;
   font-size: 16px;
-  transition: border-color 0.3s ease;
+  /* Removed transition for better performance */
 }
 
 .formInput:focus,
@@ -169,7 +163,7 @@
   font-size: 16px;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  /* Removed transition for better performance */
 }
 
 .saveButton {

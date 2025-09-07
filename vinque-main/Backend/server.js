@@ -164,6 +164,9 @@ app.use(cors({
     credentials: true
 }));
 
+console.log(`🔗 CORS allowed from: ${ALLOWED_ORIGINS.join(', ')}`);
+
+
 // Body parsers
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
@@ -2315,6 +2318,50 @@ app.get("/api/store/:id", async (req, res) => {
   }
 });
 
+// Get seller by ID
+app.get("/api/seller/:sellerId", async (req, res) => {
+  const { sellerId } = req.params;
+  let connection;
+
+  try {
+    connection = await pool.getConnection();
+
+    // Check if business_name and business_description columns exist in seller_tb
+    const [columns] = await connection.query("SHOW COLUMNS FROM seller_tb");
+    const columnNames = columns.map(col => col.Field);
+    
+    // If columns don't exist, add them
+    if (!columnNames.includes('business_name')) {
+      await connection.query("ALTER TABLE seller_tb ADD COLUMN business_name VARCHAR(255) DEFAULT ''");
+      console.log("Added business_name column to seller_tb");
+    }
+    
+    if (!columnNames.includes('business_description')) {
+      await connection.query("ALTER TABLE seller_tb ADD COLUMN business_description TEXT");
+      console.log("Added business_description column to seller_tb");
+    }
+
+    const [sellerData] = await connection.query(
+      "SELECT seller_id, business_name, business_description, business_address, seller_image, phone_num FROM seller_tb WHERE seller_id = ?",
+      [sellerId]
+    );
+
+    if (sellerData.length === 0) {
+      return res.status(404).json({ status: "fail", message: "Seller not found" });
+    }
+
+    res.json({
+      status: "success",
+      seller: sellerData[0],
+    });
+  } catch (error) {
+    console.error("Error fetching seller data:", error);
+    res.status(500).json({ status: "error", message: "Server error" });
+  } finally {
+    if (connection) connection.release();
+  }
+});
+
 // Update seller profile
 // Express Backend Route: PUT /api/seller/update/:id
 app.put("/api/seller/update/:id", (req, res, next) => {
@@ -2324,13 +2371,16 @@ app.put("/api/seller/update/:id", (req, res, next) => {
       return res.status(400).json({ success: false, error: err.message });
     }
 
-    const { id } = req.params;
-    const { business_name, business_description, business_address, phone_num } = req.body;
+    console.log("Update seller request received");
+    console.log("Request body:", req.body);
+    console.log("Request files:", req.files);
 
-    const seller_image =
-      req.files && req.files["profile_image"] && req.files["profile_image"].length > 0
-        ? req.files["profile_image"][0].filename
-        : null;
+    const { id } = req.params;
+    const { business_name, business_description, business_address, phone_num, profile_pic_url } = req.body;
+
+    // Check if a Gmail profile picture URL was provided or if a new image was uploaded
+    const hasNewImage = req.files && req.files["profile_image"] && req.files["profile_image"].length > 0;
+    const seller_image = hasNewImage ? req.files["profile_image"][0].filename : null;
 
     let connection;
 
@@ -2340,7 +2390,7 @@ app.put("/api/seller/update/:id", (req, res, next) => {
 
       // Check if seller exists
       const [sellerResult] = await connection.query(
-        "SELECT seller_id FROM seller_tb WHERE seller_id = ?",
+        "SELECT seller_id, seller_image FROM seller_tb WHERE seller_id = ?",
         [id]
       );
 
@@ -2355,25 +2405,63 @@ app.put("/api/seller/update/:id", (req, res, next) => {
         return res.status(404).json({ success: false, error: "Seller not found" });
       }
 
-      let updateQuery = `
-        UPDATE seller_tb
-        SET business_name = ?, business_description = ?, business_address = ?, phone_num = ?
-        ${seller_image ? ", seller_image = ?" : ""}
-        WHERE seller_id = ?
-      `;
-
-      const updateValues = [business_name, business_description, business_address, phone_num];
-      if (seller_image) updateValues.push(seller_image);
+      // Build the update query based on what data is provided
+      let updateQuery = "UPDATE seller_tb SET ";
+      const updateValues = [];
+      
+      // Always update these fields
+      updateQuery += "business_name = ?, business_description = ?, business_address = ?, phone_num = ?";
+      updateValues.push(business_name, business_description || "", business_address, phone_num);
+      
+      // Update image if a new one is uploaded
+      if (seller_image) {
+        updateQuery += ", seller_image = ?";
+        updateValues.push(seller_image);
+        
+        // Delete old image if it exists and is not a URL
+        const oldImage = sellerResult[0].seller_image;
+        if (oldImage && !oldImage.startsWith('http')) {
+          const oldImagePath = path.join(__dirname, 'uploads', oldImage);
+          fs.access(oldImagePath, fs.constants.F_OK, (err) => {
+            if (!err) {
+              fs.unlink(oldImagePath, (err) => {
+                if (err) console.error("Failed to delete old image:", err);
+              });
+            }
+          });
+        }
+      } 
+      // Update with profile_pic_url if provided
+      else if (profile_pic_url) {
+        updateQuery += ", seller_image = ?";
+        updateValues.push(profile_pic_url);
+      }
+      
+      // Add WHERE clause
+      updateQuery += " WHERE seller_id = ?";
       updateValues.push(id);
 
-      await connection.query(updateQuery, updateValues);
-
+      // Execute the update
+      const [updateResult] = await connection.query(updateQuery, updateValues);
       await connection.commit();
+
+      // Determine the image URL to return
+      let imageUrl = null;
+      if (seller_image) {
+        imageUrl = `/uploads/${seller_image}`;
+      } else if (profile_pic_url) {
+        imageUrl = profile_pic_url;
+      } else if (sellerResult[0].seller_image) {
+        // Keep existing image
+        const existingImage = sellerResult[0].seller_image;
+        imageUrl = existingImage.startsWith('http') ? existingImage : `/uploads/${existingImage}`;
+      }
 
       res.json({
         success: true,
         message: "Seller profile updated successfully",
-        seller_image: seller_image ? `/uploads/${seller_image}` : null,
+        seller_image: imageUrl,
+        affected_rows: updateResult.affectedRows
       });
     } catch (err) {
       if (connection) await connection.rollback();

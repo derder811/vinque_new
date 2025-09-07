@@ -23,7 +23,9 @@ export default function StorePage() {
   useEffect(() => {
     const fetchStoreData = async () => {
       try {
-        const res = await fetch(`http://localhost:3000/api/store/${id}`);
+        // Use the correct backend URL
+        const backendUrl = 'http://localhost:3000';
+        const res = await fetch(`${backendUrl}/api/store/${id}`);
         const json = await res.json();
 
         if (json.status === "success") {
@@ -57,7 +59,11 @@ export default function StorePage() {
   };
   
   const handleEditProfile = () => {
-    navigate(`/seller/edit-profile/${id}`);
+    console.log("Edit Profile button clicked");
+    const sellerId = storeInfo?.seller_id || id; // Use storeInfo.seller_id if available, otherwise fall back to id
+    console.log("Navigating to edit profile with seller ID from URL:", id);
+    console.log("Navigating to edit profile with seller ID from storeInfo:", sellerId);
+    navigate(`/seller/edit-profile/${sellerId}`);
   };
 
   const filterByCategory = (category) => {
@@ -73,9 +79,28 @@ export default function StorePage() {
     return <div className={styles.loading}>Loading store...</div>;
   }
 
-  const imageSrc = storeInfo.seller_image
-    ? `/uploads/${storeInfo.seller_image}`
-    : "/Vinque_logo.png";
+  // Use seller image if available, otherwise use Gmail profile picture or default logo
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  let imageSrc;
+  
+  if (storeInfo.seller_image && storeInfo.seller_image.startsWith('http')) {
+     // If it's a URL (like Gmail profile picture)
+     imageSrc = storeInfo.seller_image;
+   } else if (storeInfo.seller_image) {
+     // If it's a file path from our uploads
+     // Check if it already has the full path
+     if (storeInfo.seller_image.startsWith('/uploads/')) {
+       imageSrc = `http://localhost:3000${storeInfo.seller_image}`;
+     } else {
+       imageSrc = `http://localhost:3000/uploads/${storeInfo.seller_image}`;
+     }
+   } else if (user.picture && isCurrentUserSeller) {
+     // Fallback to user's Gmail picture if they're the seller
+     imageSrc = user.picture;
+   } else {
+     // Default logo as last resort
+     imageSrc = "/Vinque_logo.png";
+   }
 
   return (
     <>
@@ -98,6 +123,7 @@ export default function StorePage() {
                 className={styles.profileImage}
                 onError={(e) => {
                   e.target.onerror = null;
+                  // If image fails, use default logo
                   e.target.src = "/Vinque_logo.png";
                 }}
               />
@@ -120,7 +146,7 @@ export default function StorePage() {
           <div className={styles.storeInfo}>
             <h2>{storeInfo.business_name}</h2>
             <p className={styles.tagline}>
-              {storeInfo.business_description || "Your trusted vintage seller."}
+              {storeInfo.business_description ? storeInfo.business_description : "Your trusted vintage seller."}
             </p>
             <div className={styles.metaInfo}>
               {storeInfo.business_address && (
